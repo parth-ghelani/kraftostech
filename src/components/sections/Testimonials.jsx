@@ -242,22 +242,22 @@ export default function Testimonials() {
               <svg 
                 viewBox="0 0 140 32" 
                 className="w-32 md:w-56 h-auto fill-none stroke-[#ff3300]" 
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth="3"
+                strokeLinecap="square"
+                strokeLinejoin="miter"
               >
                 {/* Tail line */}
                 <line 
                   x1="0" 
                   y1="16" 
-                  x2="100" 
+                  x2="110" 
                   y2="16" 
-                  className="transition-transform duration-500 ease-out origin-left group-hover:scale-x-[1.25]"
+                  className="transition-transform duration-500 ease-out origin-left group-hover:scale-x-[1.15]"
                 />
                 {/* Arrowhead */}
                 <path 
-                  d="M85 4 L110 16 L85 28" 
-                  className="transition-transform duration-500 ease-out group-hover:translate-x-[26px]"
+                  d="M98 6 L120 16 L98 26" 
+                  className="transition-transform duration-500 ease-out group-hover:translate-x-[15px]"
                 />
               </svg>
             </div>

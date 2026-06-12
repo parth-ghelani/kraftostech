@@ -223,14 +223,14 @@ export default function Portfolio() {
           }
         });
 
-        // Left column (col1) moves down on scroll (starts normal, slides low)
-        tl.fromTo(col1, { y: 0 }, { y: 160, ease: "none" }, 0);
+        // Left column (col1) moves up on scroll
+        tl.fromTo(col1, { y: 0 }, { y: -80, ease: "none" }, 0);
         
-        // Right column (col3) moves down on scroll
-        tl.fromTo(col3, { y: 0 }, { y: 160, ease: "none" }, 0);
+        // Right column (col3) moves up on scroll
+        tl.fromTo(col3, { y: 0 }, { y: -80, ease: "none" }, 0);
 
-        // Middle column (col2) moves up on scroll (starts shifted low, slides to normal)
-        tl.fromTo(col2, { y: 160 }, { y: 0, ease: "none" }, 0);
+        // Middle column (col2) moves down on scroll (starts shifted up, slides down to normal)
+        tl.fromTo(col2, { y: -80 }, { y: 0, ease: "none" }, 0);
       });
     });
 
@@ -556,7 +556,7 @@ export default function Portfolio() {
     <section
       id="portfolio"
       ref={sectionRef}
-      className="relative w-full bg-transparent pt-[10vh] pb-16 md:pb-24 z-20 overflow-x-hidden"
+      className="relative w-full bg-transparent pt-[10vh] pb-6 md:pb-8 z-20 overflow-x-hidden"
     >
       <div ref={headlineRef} className="max-w-[1400px] w-full mx-auto px-6 md:px-12 text-left mb-16 md:mb-24 will-change-transform">
         <span ref={labelRef} className="font-sans text-xs font-semibold text-gray-light uppercase tracking-wider block mb-3 will-change-transform">
