@@ -7,7 +7,9 @@ scratch_frames
 video
 .agents
 .DS_Store
-*.jpeg
-*.jpg
-*.png
-*.mp4
+
+# Only ignore screenshot files at the root level, do NOT ignore images in public/
+/*.jpeg
+/*.jpg
+/*.png
+/*.mp4
