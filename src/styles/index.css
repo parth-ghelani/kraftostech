@@ -89,22 +89,13 @@ html.lenis body {
 }
 
 /* Hide scrollbars for cinematic visuals but keep scrolling active */
+html {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #070707;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3a2416;
-  border-radius: 0px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #ff7a1a;
+  display: none;
 }
 
 
