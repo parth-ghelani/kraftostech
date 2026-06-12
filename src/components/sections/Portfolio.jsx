@@ -223,14 +223,14 @@ export default function Portfolio() {
           }
         });
 
-        // Left column (col1) moves up on scroll
-        tl.fromTo(col1, { y: 0 }, { y: -80, ease: "none" }, 0);
+        // Left column (col1) moves down on scroll
+        tl.fromTo(col1, { y: 0 }, { y: 80, ease: "none" }, 0);
         
-        // Right column (col3) moves up on scroll
-        tl.fromTo(col3, { y: 0 }, { y: -80, ease: "none" }, 0);
+        // Right column (col3) moves down on scroll
+        tl.fromTo(col3, { y: 0 }, { y: 80, ease: "none" }, 0);
 
-        // Middle column (col2) moves down on scroll (starts shifted up, slides down to normal)
-        tl.fromTo(col2, { y: -80 }, { y: 0, ease: "none" }, 0);
+        // Middle column (col2) moves up on scroll (starts shifted down, slides up to normal)
+        tl.fromTo(col2, { y: 80 }, { y: 0, ease: "none" }, 0);
       });
     });
 
@@ -593,7 +593,7 @@ export default function Portfolio() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 mb-12 block md:flex md:justify-start">
+      <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 mb-16 md:mb-20 block md:flex md:justify-start">
         <div className="w-auto md:w-auto overflow-x-auto no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
           <div className="flex md:inline-flex gap-2 p-1.5 bg-charcoal/80 backdrop-blur-md border border-border/60 rounded-full min-w-max">
             {filters.map((filter) => {
