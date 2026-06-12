@@ -1,0 +1,13 @@
+node_modules
+public_html (7)
+dist
+collagefy
+logo
+scratch_frames
+video
+.agents
+.DS_Store
+*.jpeg
+*.jpg
+*.png
+*.mp4
