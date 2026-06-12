@@ -509,6 +509,28 @@ export default function Portfolio() {
       links: [
         { type: "web", url: "https://invited.kraftostech.com", label: "Link" }
       ]
+    },
+    {
+      id: 25,
+      title: "Ez-Retail",
+      category: "App Development • Android",
+      img: "ezretail.png",
+      fallbackImg: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
+      desc: "B2B price-coding & POS connectivity app. Simplifies inventory management and barcode scanning for retail store networks.",
+      links: [
+        { type: "android", url: "https://play.google.com/store/apps/details?id=com.ezretail.excelreader" }
+      ]
+    },
+    {
+      id: 26,
+      title: "Blostem",
+      category: "App Development • iOS / Android",
+      img: "blostem.png",
+      fallbackImg: "https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&w=800&q=80",
+      desc: "Fintech banking infrastructure SDK. Provides a unified API and embeddable white-label SDK for Super Apps to offer FDs, RDs, and UPI credit lines.",
+      links: [
+        { type: "web", url: "https://www.blostem.com/", label: "Link" }
+      ]
     }
   ];
 
