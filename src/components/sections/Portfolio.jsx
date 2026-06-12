@@ -114,7 +114,7 @@ const ProjectCard = React.memo(({ project, style }) => {
                       <circle cx="12" cy="12" r="10" />
                       <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
                     </svg>
-                    {link.label || "Web Demo"}
+                    {link.label || "Web"}
                   </a>
                 );
               }
@@ -578,7 +578,7 @@ export default function Portfolio() {
     <section
       id="portfolio"
       ref={sectionRef}
-      className="relative w-full bg-transparent pt-[10vh] pb-6 md:pb-8 z-20 overflow-x-hidden"
+      className="relative w-full bg-transparent pt-20 pb-20 md:pt-28 md:pb-28 z-20 overflow-x-hidden"
     >
       <div ref={headlineRef} className="max-w-[1400px] w-full mx-auto px-6 md:px-12 text-left mb-16 md:mb-24 will-change-transform">
         <span ref={labelRef} className="font-sans text-xs font-semibold text-gray-light uppercase tracking-wider block mb-3 will-change-transform">
