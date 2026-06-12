@@ -360,7 +360,7 @@ export default function Portfolio() {
       category: "Flutter • iOS",
       img: "branding-4.jpg",
       fallbackImg: "https://images.unsplash.com/photo-1509343256512-d77a5cb3791b?auto=format&fit=crop&w=800&q=80",
-      desc: "Daily video self-reflection diary and emotional intelligence journal.",
+      desc: "A general social platform for sharing hobbies, interests, and community engagement.",
       links: [
         { type: "ios", url: "https://appadvice.com/app/well-thats-me/1565855015" }
       ]
@@ -382,7 +382,7 @@ export default function Portfolio() {
       category: "Flutter • Android / Web",
       img: "branding-5.jpg",
       fallbackImg: "https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&w=800&q=80",
-      desc: "Unified non-profit charity donations tracking and portal.",
+      desc: "Staffing and deployment platform for flexible workers in education, helping school boards manage availability and substitute replacements.",
       links: [
         { type: "android", url: "https://play.google.com/store/apps/details?id=com.flexgiving.app" },
         { type: "web", url: "https://flexgivingdev.web.app" }
