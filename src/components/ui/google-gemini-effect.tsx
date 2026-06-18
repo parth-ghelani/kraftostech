@@ -38,26 +38,49 @@ export const KraftosEffect = ({ className, scrollTriggerRef }: KraftosEffectProp
       path.style.strokeDashoffset = `${length}`;
     });
 
-    // Animate each path's strokeDashoffset to 0 as user scrolls
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: scrollTriggerRef.current,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 1,
-      }
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed drawing animation
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: scrollTriggerRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1,
+        }
+      });
+
+      paths.forEach((path, i) => {
+        tl.to(path, {
+          strokeDashoffset: 0,
+          duration: 1,
+          ease: "none",
+        }, i * 0.15);
+      });
     });
 
-    paths.forEach((path, i) => {
-      tl.to(path, {
-        strokeDashoffset: 0,
-        duration: 1,
-        ease: "none",
-      }, i * 0.15);
+    // Mobile: Simple one-time fade/draw animation on viewport entry
+    mm.add("(max-width: 767px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: scrollTriggerRef.current,
+          start: "top 80%",
+          once: true,
+        }
+      });
+
+      paths.forEach((path, i) => {
+        tl.to(path, {
+          strokeDashoffset: 0,
+          duration: 1.5,
+          ease: "power2.out",
+        }, i * 0.2);
+      });
     });
 
     return () => {
-      tl.kill();
+      mm.revert();
     };
   }, [scrollTriggerRef]);
 

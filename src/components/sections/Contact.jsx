@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { InstagramLogo, LinkedinLogo, FacebookLogo } from '@phosphor-icons/react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,14 +27,35 @@ export default function Contact() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Refresh ScrollTrigger to ensure correct heights are registered, especially with lazy-loaded components
+  useEffect(() => {
+    ScrollTrigger.refresh();
+
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+
+    const handleLoad = () => {
+      ScrollTrigger.refresh();
+    };
+    window.addEventListener('load', handleLoad);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('load', handleLoad);
+    };
+  }, []);
+
   useEffect(() => {
     const container = containerRef.current;
     const panel2 = panel2Ref.current;
 
-    if (!container || !panel2 || isMobile) return;
+    if (!container || !panel2) return;
 
-    const ctx = gsap.context(() => {
-      // Circular reveal animation on scroll as section enters screen (Desktop Only)
+    const mm = gsap.matchMedia();
+
+    mm.add("(min-width: 768px)", () => {
+      // Desktop: Circular reveal animation on scroll as section enters screen
       gsap.fromTo(panel2,
         { 
           clipPath: 'circle(0% at 50% 100%)',
@@ -64,7 +86,7 @@ export default function Contact() {
         }
       );
 
-      // Brand wordmark scale and fade in on scroll (Desktop Only)
+      // Desktop: Brand wordmark scale and fade in on scroll
       if (brandLogoWordmarkRef.current) {
         const wordmark = brandLogoWordmarkRef.current;
         gsap.fromTo(wordmark,
@@ -85,36 +107,34 @@ export default function Contact() {
           }
         );
       }
-
     });
 
-    return () => ctx.revert();
-  }, [isMobile]);
+    mm.add("(max-width: 767px)", () => {
+      // Mobile: Disable intensive clip-path circle rendering entirely
+      gsap.set(panel2, { clipPath: 'none', webkitClipPath: 'none' });
 
-  // Separate animation for mobile so the wordmark still animates in on scroll
-  useEffect(() => {
-    if (!isMobile || !brandLogoWordmarkRef.current) return;
-
-    const wordmark = brandLogoWordmarkRef.current;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(wordmark,
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          ease: 'power1.out',
-          scrollTrigger: {
-            trigger: wordmark,
-            start: 'top 90%',
-            end: 'top 70%',
-            scrub: true,
+      // Mobile: Simple one-time fade/slide in (no scroll scrubbing)
+      if (brandLogoWordmarkRef.current) {
+        const wordmark = brandLogoWordmarkRef.current;
+        gsap.fromTo(wordmark,
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: wordmark,
+              start: 'top 90%',
+              once: true,
+            }
           }
-        }
-      );
+        );
+      }
     });
 
-    return () => ctx.revert();
-  }, [isMobile]);
+    return () => mm.revert();
+  }, []);
 
   return (
     <section
@@ -126,7 +146,7 @@ export default function Contact() {
       <div
         ref={panel2Ref}
         className="relative w-full bg-[#f3f3f3] text-black flex flex-col justify-between p-6 md:p-16 z-20 overflow-visible pointer-events-auto"
-        style={isMobile ? {} : { 
+        style={{ 
           clipPath: 'circle(0% at 50% 100%)',
           webkitClipPath: 'circle(0% at 50% 100%)'
         }}
@@ -165,9 +185,16 @@ export default function Contact() {
             
             <div className="flex flex-col gap-1 font-sans text-[13px] md:text-[14px] text-zinc-700">
               <span className="font-mono text-[10px] text-zinc-400 tracking-widest uppercase block mb-1">ADDRESS</span>
-              <p>25, 2nd Floor, Nandanvan Society,</p>
-              <p>Nr. Singanpor Vegetable Market, Singanpor Road,</p>
-              <p>Surat, Gujarat, India 395004</p>
+              <a 
+                href="https://maps.google.com/?q=25,+2nd+Floor,+Nandanvan+Society,+Nr.+Singanpor+Vegetable+Market,+Singanpor+Road,+Surat,+Gujarat,+India+395004" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-[#ff3300] transition-colors"
+              >
+                <p>25, 2nd Floor, Nandanvan Society,</p>
+                <p>Nr. Singanpor Vegetable Market, Singanpor Road,</p>
+                <p>Surat, Gujarat, India 395004</p>
+              </a>
             </div>
 
             <div className="flex flex-col gap-1 font-sans text-[13px] md:text-[14px] text-zinc-700">
@@ -195,7 +222,7 @@ export default function Contact() {
                 <li><a href="#home" className="hover:text-[#ff3300] transition-colors">Home</a></li>
                 <li><a href="#about" className="hover:text-[#ff3300] transition-colors">About Us</a></li>
                 <li><a href="#portfolio" className="hover:text-[#ff3300] transition-colors">Portfolio</a></li>
-                <li><a href="/careers-section" className="hover:text-[#ff3300] transition-colors">Careers</a></li>
+                <li><a href="#careers" className="hover:text-[#ff3300] transition-colors">Careers</a></li>
               </ul>
             </div>
           </div>
@@ -216,10 +243,34 @@ export default function Contact() {
             
             <div className="mt-0 md:mt-6">
               <span className="font-mono text-[10px] text-zinc-400 tracking-widest uppercase block mb-3">SOCIALS</span>
-              <div className="flex flex-col md:flex-row gap-2 md:gap-4 font-sans text-[13px] md:text-[14px]">
-                <a href="https://www.instagram.com/kraftostech/" target="_blank" rel="noreferrer" className="text-zinc-700 hover:text-[#ff3300] transition-colors font-medium">Instagram</a>
-                <a href="https://www.linkedin.com/company/kraftostech/" target="_blank" rel="noreferrer" className="text-zinc-700 hover:text-[#ff3300] transition-colors font-medium">LinkedIn</a>
-                <a href="https://www.facebook.com/kraftostech/" target="_blank" rel="noreferrer" className="text-zinc-700 hover:text-[#ff3300] transition-colors font-medium">Facebook</a>
+              <div className="flex gap-3 items-center">
+                <a 
+                  href="https://www.instagram.com/kraftostech/" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-2.5 rounded-full border border-black/10 hover:border-[#e1306c] bg-black/5 hover:bg-[#e1306c] text-zinc-700 hover:text-white transition-all duration-300 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95"
+                  aria-label="Instagram"
+                >
+                  <InstagramLogo size={18} />
+                </a>
+                <a 
+                  href="https://www.linkedin.com/company/kraftostech/" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-2.5 rounded-full border border-black/10 hover:border-[#0a66c2] bg-black/5 hover:bg-[#0a66c2] text-zinc-700 hover:text-white transition-all duration-300 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95"
+                  aria-label="LinkedIn"
+                >
+                  <LinkedinLogo size={18} />
+                </a>
+                <a 
+                  href="https://www.facebook.com/kraftostech/" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-2.5 rounded-full border border-black/10 hover:border-[#1877f2] bg-black/5 hover:bg-[#1877f2] text-zinc-700 hover:text-white transition-all duration-300 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95"
+                  aria-label="Facebook"
+                >
+                  <FacebookLogo size={18} />
+                </a>
               </div>
             </div>
           </div>
@@ -240,8 +291,7 @@ export default function Contact() {
                   {char}
                 </span>
               ))}
-            </span>
-            <span className="font-serif italic font-[700]">
+            </span><span className="font-serif italic font-[700]">
               {"tech.".split("").map((char, index) => (
                 <span 
                   key={`t-${index}`}

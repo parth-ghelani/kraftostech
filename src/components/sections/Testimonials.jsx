@@ -52,7 +52,10 @@ export default function Testimonials() {
     const contactSlide = contactSlideRef.current;
     if (!contactSlide) return;
 
-    const ctx = gsap.context(() => {
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed translation
+    mm.add("(min-width: 768px)", () => {
       gsap.fromTo(contactSlide,
         { x: "0vw" },
         {
@@ -68,7 +71,12 @@ export default function Testimonials() {
       );
     });
 
-    return () => ctx.revert();
+    // Mobile: Keep static to prevent horizontal jitter and layout shifts
+    mm.add("(max-width: 767px)", () => {
+      gsap.set(contactSlide, { x: "0vw" });
+    });
+
+    return () => mm.revert();
   }, []);
 
   const activeItem = testimonials[activeIndex];
@@ -226,7 +234,7 @@ export default function Testimonials() {
       </div>
 
       {/* Sliding Contact Banner (Arrow) - Positioned at the bottom of Testimonials, just above footer */}
-      <div className="w-full overflow-hidden py-16 md:py-24 mt-16 md:mt-24 border-t border-white/5">
+      <div id="contact-banner" className="w-full overflow-hidden py-16 md:py-24 mt-16 md:mt-24 border-t border-white/5">
         <div 
           ref={contactSlideRef}
           className="flex justify-start items-center w-max pl-6 md:pl-12"
@@ -243,8 +251,8 @@ export default function Testimonials() {
                 viewBox="0 0 140 32" 
                 className="w-32 md:w-56 h-auto fill-none stroke-[#ff3300]" 
                 strokeWidth="8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeLinecap="square"
+                strokeLinejoin="miter"
               >
                 {/* Tail line */}
                 <line 

@@ -36,15 +36,15 @@ interface ExpandableTabsProps {
 }
 
 const buttonVariants = {
-  initial: {
+  initial: (custom: { isExpanded: boolean; isDesktop: boolean }) => ({
     gap: 0,
-    paddingLeft: ".5rem",
-    paddingRight: ".5rem",
-  },
-  animate: (isExpanded: boolean) => ({
-    gap: isExpanded ? ".5rem" : 0,
-    paddingLeft: isExpanded ? "1rem" : ".5rem",
-    paddingRight: isExpanded ? "1rem" : ".5rem",
+    paddingLeft: custom?.isDesktop ? ".5rem" : "0.25rem",
+    paddingRight: custom?.isDesktop ? ".5rem" : "0.25rem",
+  }),
+  animate: (custom: { isExpanded: boolean; isDesktop: boolean }) => ({
+    gap: custom?.isExpanded ? ".5rem" : 0,
+    paddingLeft: custom?.isExpanded ? "1rem" : (custom?.isDesktop ? ".5rem" : "0.25rem"),
+    paddingRight: custom?.isExpanded ? "1rem" : (custom?.isDesktop ? ".5rem" : "0.25rem"),
   }),
 };
 
@@ -120,7 +120,7 @@ export function ExpandableTabs({
               variants={buttonVariants}
               initial="initial"
               animate="animate"
-              custom={isExpanded}
+              custom={{ isExpanded, isDesktop }}
               onMouseEnter={() => setHovered(index)}
               onClick={() => handleSelect(index)}
               transition={transition}
@@ -134,7 +134,7 @@ export function ExpandableTabs({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <Icon size={20} />
+              <Icon size={isDesktop ? 20 : 16} />
               <span
                 className={cn(
                   "inline-block overflow-hidden whitespace-nowrap font-medium transition-all duration-300 ease-out",
@@ -149,7 +149,7 @@ export function ExpandableTabs({
       </div>
 
       {/* Middle Column - Fixed Spacer for Independent Floating Logo */}
-      <div className="w-10 sm:w-16 shrink-0 pointer-events-none" />
+      <div ref={placeholderRef} className="w-10 sm:w-16 shrink-0 pointer-events-none" />
 
       {/* Right Column - Services, Tech, Work, Contact */}
       <div className="flex items-center justify-between w-full px-2">
@@ -168,7 +168,7 @@ export function ExpandableTabs({
               variants={buttonVariants}
               initial="initial"
               animate="animate"
-              custom={isExpanded}
+              custom={{ isExpanded, isDesktop }}
               onMouseEnter={() => setHovered(index)}
               onClick={() => handleSelect(index)}
               transition={transition}
@@ -182,7 +182,7 @@ export function ExpandableTabs({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <Icon size={20} />
+              <Icon size={isDesktop ? 20 : 16} />
               <span
                 className={cn(
                   "inline-block overflow-hidden whitespace-nowrap font-medium transition-all duration-300 ease-out",

@@ -211,7 +211,11 @@ export default function Navigation({ isLoading }) {
       if (isScrollingRef.current) return;
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
+          if (entry.target.id === 'contact-banner') {
+            setActiveSection('contact');
+          } else {
+            setActiveSection(entry.target.id);
+          }
         }
       });
     };
@@ -225,6 +229,9 @@ export default function Navigation({ isLoading }) {
       }
     });
 
+    const bannerEl = document.getElementById('contact-banner');
+    if (bannerEl) observer.observe(bannerEl);
+
     return () => observer.disconnect();
   }, [isLoading]);
 
@@ -236,41 +243,83 @@ export default function Navigation({ isLoading }) {
     gsap.set(navWrapperRef.current, { pointerEvents: 'none' });
     gsap.set(navInnerRef.current, { opacity: 0, scale: 1.0 });
 
-    // Fade in after scrolling past 60px, scale down slightly to 0.92
-    const trigger = ScrollTrigger.create({
-      start: 60,
-      end: 300,
-      onUpdate: (self) => {
-        const progress = self.progress;
-        // Opacity: 0 -> 1 in first 40% of range
-        const opacity = Math.min(1, progress / 0.4);
-        // Scale: 1.0 -> 0.92
-        const scale = 1.0 - (progress * 0.08);
-        
-        navInnerRef.current.style.opacity = opacity;
-        navInnerRef.current.style.transform = `scale(${scale})`;
-      },
-      onEnter: () => {
-        navWrapperRef.current.style.pointerEvents = 'auto';
-      },
-      onLeaveBack: () => {
-        navWrapperRef.current.style.pointerEvents = 'none';
-        navInnerRef.current.style.opacity = 0;
-      },
+    const mm = gsap.matchMedia();
+
+    // Desktop: Fade in after scrolling past 60px, scale down slightly to 0.92
+    mm.add("(min-width: 768px)", () => {
+      ScrollTrigger.create({
+        start: 60,
+        end: 300,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          // Opacity: 0 -> 1 in first 40% of range
+          const opacity = Math.min(1, progress / 0.4);
+          // Scale: 1.0 -> 0.92
+          const scale = 1.0 - (progress * 0.08);
+          
+          navInnerRef.current.style.opacity = opacity;
+          navInnerRef.current.style.transform = `scale(${scale})`;
+        },
+        onEnter: () => {
+          navWrapperRef.current.style.pointerEvents = 'auto';
+        },
+        onLeaveBack: () => {
+          navWrapperRef.current.style.pointerEvents = 'none';
+          navInnerRef.current.style.opacity = 0;
+        },
+      });
     });
 
-    return () => trigger.kill();
+    // Mobile: Simple toggle past 60px scroll (no continuous style computations on scroll)
+    mm.add("(max-width: 767px)", () => {
+      gsap.to(navInnerRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        scrollTrigger: {
+          start: 60,
+          toggleActions: "play none none reverse",
+          onEnter: () => {
+            navWrapperRef.current.style.pointerEvents = 'auto';
+          },
+          onLeaveBack: () => {
+            navWrapperRef.current.style.pointerEvents = 'none';
+            navInnerRef.current.style.opacity = 0;
+          }
+        }
+      });
+    });
+
+    return () => mm.revert();
   }, []);
 
   // GSAP ScrollTrigger timeline for flying logo and glow opacity
   useEffect(() => {
     if (isLoading || !globalLogoRef.current || !cardGlowRef.current) return;
 
-    // Initialize GSAP percentage coordinates and base states
+    // Helper to calculate translation offset relative to placeholder center
+    const getLogoTargetTranslation = () => {
+      if (!globalLogoRef.current || !placeholderRef.current) {
+        return { x: 0, y: 48 };
+      }
+      
+      const placeholderRect = placeholderRef.current.getBoundingClientRect();
+      const originX = window.innerWidth / 2;
+      
+      const targetX = placeholderRect.left + placeholderRect.width / 2;
+      const targetY = placeholderRect.top + placeholderRect.height / 2;
+      
+      return {
+        x: targetX - originX,
+        y: targetY
+      };
+    };
+
+    // Initialize GSAP percentage coordinates and base states with screen center dynamic Y anchor
     gsap.set(globalLogoRef.current, { 
       xPercent: -50, 
       yPercent: -50, 
-      y: 60, 
+      y: () => window.innerHeight / 2 + 60, 
       scale: 1 
     });
 
@@ -289,51 +338,75 @@ export default function Navigation({ isLoading }) {
       }
     );
 
-    // 2. Scroll-scrubbed timeline for pure vertical logo transition and scale down
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: document.body,
-        start: "top top",
-        end: "300px top",
-        scrub: 0.5,
-      }
-    });
+    const mm = gsap.matchMedia();
 
-    // Translate logo vertically straight to the centered navbar baseline
-    tl.to(globalLogoRef.current, {
-      y: () => -Math.floor(window.innerHeight / 2) + 48,
-      scale: () => window.innerWidth < 768 ? 0.18 : 0.14,
-      ease: "power2.inOut"
-    }, 0);
-
-    // Scrub the glow from 1 to 0 on scroll
-    tl.fromTo(cardGlowRef.current, 
-      { opacity: 1 },
-      { opacity: 0, ease: "power2.inOut" },
-      0
-    );
-
-    // 3. Scroll-scrubbed rotation for the global logo image across the entire page
-    let rotationTl;
-    if (globalLogoImgRef.current) {
-      rotationTl = gsap.timeline({
+    // Desktop: flying logo and glow opacity + scroll-scrubbed rotation
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: document.body,
           start: "top top",
-          end: "bottom bottom",
-          scrub: 1.2, // buttery smooth scrub lagging
+          end: "300px top",
+          scrub: 0.5,
         }
       });
-      rotationTl.to(globalLogoImgRef.current, {
-        rotation: 360 * 6, // 6 full 360-degree rotations from start to end of page scroll
-        ease: "none"
-      });
-    }
 
-    return () => {
-      tl.kill();
-      if (rotationTl) rotationTl.kill();
-    };
+      tl.to(globalLogoRef.current, {
+        x: () => getLogoTargetTranslation().x,
+        y: () => getLogoTargetTranslation().y,
+        scale: 0.14,
+        ease: "power2.inOut"
+      }, 0);
+
+      tl.fromTo(cardGlowRef.current, 
+        { opacity: 1 },
+        { opacity: 0, ease: "power2.inOut" },
+        0
+      );
+
+      // Scroll-scrubbed rotation for the global logo image across the entire page (Desktop only)
+      if (globalLogoImgRef.current) {
+        const rotationTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: document.body,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1.2,
+          }
+        });
+        rotationTl.to(globalLogoImgRef.current, {
+          rotation: 360 * 6,
+          ease: "none"
+        });
+      }
+    });
+
+    // Mobile: flying logo and glow opacity (no whole-page scroll-scrubbed rotation)
+    mm.add("(max-width: 767px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: document.body,
+          start: "top top",
+          end: "300px top",
+          scrub: 0.5,
+        }
+      });
+
+      tl.to(globalLogoRef.current, {
+        x: () => getLogoTargetTranslation().x,
+        y: () => getLogoTargetTranslation().y,
+        scale: 0.18,
+        ease: "power2.inOut"
+      }, 0);
+
+      tl.fromTo(cardGlowRef.current, 
+        { opacity: 1 },
+        { opacity: 0, ease: "power2.inOut" },
+        0
+      );
+    });
+
+    return () => mm.revert();
   }, [isLoading]);
 
   // ScrollTrigger to fade in/out top-left logo when scrolling away from Hero
@@ -343,26 +416,53 @@ export default function Navigation({ isLoading }) {
     // Start hidden
     gsap.set(brandLogoRef.current, { opacity: 0, pointerEvents: 'none' });
 
-    const trigger = ScrollTrigger.create({
-      trigger: "#about",
-      start: "top 90%",
-      end: "top 50%",
-      onUpdate: (self) => {
-        const opacity = self.progress;
-        if (brandLogoRef.current) {
-          brandLogoRef.current.style.opacity = opacity;
-          brandLogoRef.current.style.pointerEvents = opacity > 0.05 ? 'auto' : 'none';
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed brand logo fade
+    mm.add("(min-width: 768px)", () => {
+      ScrollTrigger.create({
+        trigger: "#about",
+        start: "top 90%",
+        end: "top 50%",
+        onUpdate: (self) => {
+          const opacity = self.progress;
+          if (brandLogoRef.current) {
+            brandLogoRef.current.style.opacity = opacity;
+            brandLogoRef.current.style.pointerEvents = opacity > 0.05 ? 'auto' : 'none';
+          }
+        },
+        onLeaveBack: () => {
+          if (brandLogoRef.current) {
+            brandLogoRef.current.style.opacity = 0;
+            brandLogoRef.current.style.pointerEvents = 'none';
+          }
         }
-      },
-      onLeaveBack: () => {
-        if (brandLogoRef.current) {
-          brandLogoRef.current.style.opacity = 0;
-          brandLogoRef.current.style.pointerEvents = 'none';
-        }
-      }
+      });
     });
 
-    return () => trigger.kill();
+    // Mobile: Simple toggle fade-in/out on entering #about (no scroll scrubbing)
+    mm.add("(max-width: 767px)", () => {
+      gsap.to(brandLogoRef.current, {
+        opacity: 1,
+        duration: 0.3,
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top 90%",
+          toggleActions: "play none none reverse",
+          onEnter: () => {
+            if (brandLogoRef.current) brandLogoRef.current.style.pointerEvents = 'auto';
+          },
+          onLeaveBack: () => {
+            if (brandLogoRef.current) {
+              brandLogoRef.current.style.opacity = 0;
+              brandLogoRef.current.style.pointerEvents = 'none';
+            }
+          }
+        }
+      });
+    });
+
+    return () => mm.revert();
   }, [isLoading]);
 
   const handleTabChange = (index) => {
@@ -396,14 +496,13 @@ export default function Navigation({ isLoading }) {
       >
         <MagneticText />
       </div>
-
       {/* Global Flying Glass Logo - Locked horizontally to center: left-50% */}
       <div 
         ref={globalLogoRef}
-        className="fixed top-1/2 left-1/2 z-[60] pointer-events-none"
+        className="fixed top-0 left-1/2 z-[60] pointer-events-none"
         style={{ 
           transformOrigin: "center center",
-          transform: "translate(-50%, -50%) translate3d(0, 60px, 0) scale(1)"
+          transform: "translate(-50%, -50%) translate3d(0, 50svh, 0) translate3d(0, 60px, 0) scale(1)"
         }}
       >
         <div className="relative w-44 h-44 md:w-56 md:h-56 flex items-center justify-center">
@@ -442,6 +541,7 @@ export default function Navigation({ isLoading }) {
             tabs={tabs}
             activeTab={activeTab !== -1 ? activeTab : 0}
             onChange={handleTabChange}
+            placeholderRef={placeholderRef}
             activeColor="text-[#070707] bg-white/92 font-semibold"
             className="bg-black/75 backdrop-blur-md border border-white/[0.08] rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.5)] p-1.5 w-full max-w-[560px]"
           />

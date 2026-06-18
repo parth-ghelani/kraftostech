@@ -15,31 +15,54 @@ export default function Services() {
   useEffect(() => {
     if (!sectionRef.current || !lineRef.current) return;
 
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top 80%",
-        end: "top 20%",
-        scrub: 1,
-        onToggle: (self) => {
-          const state = self.isActive ? "transform, opacity" : "auto";
-          if (lineRef.current) lineRef.current.style.willChange = state;
-          if (labelRef.current) labelRef.current.style.willChange = state;
-          if (headlineRef.current) headlineRef.current.style.willChange = state;
-          if (gridRef.current) gridRef.current.style.willChange = state;
-          if (logosRef.current) logosRef.current.style.willChange = state;
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed progressive reveal
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          end: "top 20%",
+          scrub: 1,
+          onToggle: (self) => {
+            const state = self.isActive ? "transform, opacity" : "auto";
+            if (lineRef.current) lineRef.current.style.willChange = state;
+            if (labelRef.current) labelRef.current.style.willChange = state;
+            if (headlineRef.current) headlineRef.current.style.willChange = state;
+            if (gridRef.current) gridRef.current.style.willChange = state;
+            if (logosRef.current) logosRef.current.style.willChange = state;
+          }
         }
-      }
+      });
+
+      tl.fromTo(lineRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "power2.inOut" })
+        .fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, "-=0.4")
+        .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
+        .fromTo(gridRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
+        .fromTo(logosRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.5");
     });
 
-    tl.fromTo(lineRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "power2.inOut" })
-      .fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, "-=0.4")
-      .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
-      .fromTo(gridRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
-      .fromTo(logosRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.5");
+    // Mobile: Fast single entry fade-in once
+    mm.add("(max-width: 767px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 90%",
+          once: true,
+        }
+      });
+
+      tl.fromTo(lineRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: "power2.out" })
+        .fromTo([labelRef.current, headlineRef.current, gridRef.current, logosRef.current],
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power2.out" },
+          "-=0.5"
+        );
+    });
 
     return () => {
-      tl.kill();
+      mm.revert();
     };
   }, []);
 

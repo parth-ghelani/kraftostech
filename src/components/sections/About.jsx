@@ -34,32 +34,52 @@ export default function About() {
   useEffect(() => {
     if (!sectionRef.current || !contentRef.current) return;
 
-    // Progressive Reveal Timeline scrubbed to scroll height
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: contentRef.current,
-        start: "top 85%", // starts when top of content grid enters screen
-        end: "top 35%",   // ends when top of content grid reaches upper-middle viewport
-        scrub: 1.2,       // smooth delay
-        onToggle: (self) => {
-          const state = self.isActive ? "transform, opacity" : "auto";
-          if (labelRef.current) labelRef.current.style.willChange = state;
-          if (headlineRef.current) headlineRef.current.style.willChange = state;
-          if (bodyColsRef.current) bodyColsRef.current.style.willChange = state;
-          if (imageRef.current) imageRef.current.style.willChange = state;
-          if (statsRef.current) statsRef.current.style.willChange = state;
+    const mm = gsap.matchMedia();
+    let statsTrigger;
+
+    // Desktop: Scroll-scrubbed progressive reveal
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: contentRef.current,
+          start: "top 85%", // starts when top of content grid enters screen
+          end: "top 35%",   // ends when top of content grid reaches upper-middle viewport
+          scrub: 1.2,       // smooth delay
+          onToggle: (self) => {
+            const state = self.isActive ? "transform, opacity" : "auto";
+            if (labelRef.current) labelRef.current.style.willChange = state;
+            if (headlineRef.current) headlineRef.current.style.willChange = state;
+            if (bodyColsRef.current) bodyColsRef.current.style.willChange = state;
+            if (imageRef.current) imageRef.current.style.willChange = state;
+            if (statsRef.current) statsRef.current.style.willChange = state;
+          }
         }
-      }
+      });
+
+      tl.fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 })
+        .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
+        .fromTo(bodyColsRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
+        .fromTo(imageRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.5")
+        .fromTo(statsRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, "-=0.6");
     });
 
-    tl.fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 })
-      .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
-      .fromTo(bodyColsRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
-      .fromTo(imageRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.5")
-      .fromTo(statsRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, "-=0.6");
+    // Mobile: Staggered entry animation once (no scroll scrubbing)
+    mm.add("(max-width: 767px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: contentRef.current,
+          start: "top 90%",
+          once: true
+        }
+      });
+
+      tl.fromTo([labelRef.current, headlineRef.current, bodyColsRef.current, imageRef.current, statsRef.current],
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power2.out" }
+      );
+    });
 
     // 4. Stats Count-Up Animation (Single parent trigger)
-    let statsTrigger;
     if (statsRef.current) {
       const statElements = statsRef.current.querySelectorAll('.stat-number-value');
       statsTrigger = ScrollTrigger.create({
@@ -100,7 +120,7 @@ export default function About() {
     }
 
     return () => {
-      tl.kill();
+      mm.revert();
       if (statsTrigger) statsTrigger.kill();
       if (videoObserver && video) videoObserver.disconnect();
     };

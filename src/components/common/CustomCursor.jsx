@@ -16,12 +16,12 @@ export default function CustomCursor() {
 
     // Create central dot element
     const dot = document.createElement('div');
-    dot.className = "fixed top-0 left-0 w-2 h-2 bg-[#ff7a1a] rounded-full pointer-events-none z-[101] -translate-x-1/2 -translate-y-1/2 mix-blend-difference";
+    dot.className = "fixed top-0 left-0 w-2 h-2 bg-[#ff7a1a] rounded-full pointer-events-none z-[10001] -translate-x-1/2 -translate-y-1/2 mix-blend-difference";
     containerRef.current.appendChild(dot);
 
     // Create outer ring element
     const ring = document.createElement('div');
-    ring.className = "fixed top-0 left-0 w-8 h-8 border border-[#ff7a1a]/60 rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-difference";
+    ring.className = "fixed top-0 left-0 w-8 h-8 border border-[#ff7a1a]/60 rounded-full pointer-events-none z-[10000] -translate-x-1/2 -translate-y-1/2 mix-blend-difference";
     containerRef.current.appendChild(ring);
 
     // Instantly bind coordinates to GSAP quickTo for zero-lag smooth tracking (120Hz compatible)
@@ -37,9 +37,10 @@ export default function CustomCursor() {
       ringYTo(e.clientY);
     };
 
-    // Magnify cursor over buttons, anchors, and clickable elements
+     // Magnify cursor over buttons, anchors, and clickable elements
     const handleMouseOver = (e) => {
       const target = e.target;
+      const projectCard = target.closest('.project-card');
       const isClickable = target.closest('a') || 
                           target.closest('button') || 
                           target.closest('input') || 
@@ -47,11 +48,14 @@ export default function CustomCursor() {
                           target.closest('.cursor-pointer') ||
                           window.getComputedStyle(target).cursor === 'pointer';
 
-      if (isClickable) {
-        gsap.to(ring, { scale: 1.6, borderColor: "#ff7a1a", duration: 0.2, ease: "power2.out" });
+      if (projectCard) {
+        gsap.to(ring, { scale: 2.2, borderColor: "#ff7a1a", backgroundColor: "rgba(255, 122, 26, 0.12)", duration: 0.3, ease: "power2.out" });
+        gsap.to(dot, { scale: 0.4, backgroundColor: "#ffffff", duration: 0.3, ease: "power2.out" });
+      } else if (isClickable) {
+        gsap.to(ring, { scale: 1.6, borderColor: "#ff7a1a", backgroundColor: "transparent", duration: 0.2, ease: "power2.out" });
         gsap.to(dot, { scale: 0.5, backgroundColor: "#ffffff", duration: 0.2, ease: "power2.out" });
       } else {
-        gsap.to(ring, { scale: 1.0, borderColor: "rgba(255, 122, 26, 0.6)", duration: 0.2, ease: "power2.out" });
+        gsap.to(ring, { scale: 1.0, borderColor: "rgba(255, 122, 26, 0.6)", backgroundColor: "transparent", duration: 0.2, ease: "power2.out" });
         gsap.to(dot, { scale: 1.0, backgroundColor: "#ff7a1a", duration: 0.2, ease: "power2.out" });
       }
     };
@@ -80,7 +84,7 @@ export default function CustomCursor() {
   return (
     <div 
       ref={containerRef} 
-      className="pointer-events-none fixed inset-0 z-[100] overflow-hidden" 
+      className="pointer-events-none fixed inset-0 z-[10000] overflow-hidden" 
     />
   );
 }

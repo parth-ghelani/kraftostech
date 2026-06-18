@@ -1,241 +1,149 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion } from 'framer-motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Stylized Skeleton Loader for smooth portfolio card transitions
-const ProjectCardSkeleton = () => {
+// Helper to extract the primary URL from project links
+const getPrimaryLink = (project) => {
+  if (!project.links || project.links.length === 0) return '#';
+  const webLink = project.links.find(l => l.type === 'web');
+  if (webLink) return webLink.url;
+  const iosLink = project.links.find(l => l.type === 'ios');
+  if (iosLink) return iosLink.url;
+  const androidLink = project.links.find(l => l.type === 'android');
+  if (androidLink) return androidLink.url;
+  return project.links[0].url;
+};
+
+// ProjectCard component
+const ProjectCard = React.memo(({ project, isMarquee = false }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const primaryUrl = getPrimaryLink(project);
+
+  const handleCardClick = (e) => {
+    window.open(primaryUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.open(primaryUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (window.isMouseActive === false) return;
+    setIsHovered(true);
+  };
+
+  const handleMouseMove = () => {
+    if (window.isMouseActive === false) return;
+    if (!isHovered) {
+      setIsHovered(true);
+    }
+  };
+
   return (
-    <div className="w-full flex flex-col bg-charcoal border border-border overflow-hidden animate-pulse">
-      {/* Image Frame Skeleton */}
-      <div className="w-full aspect-[16/10] bg-subtle-bg relative flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border border-border/40 bg-charcoal/50 flex items-center justify-center">
-          <svg className="w-5 h-5 text-gray-light/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
+    <motion.div
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`View project ${project.title}`}
+      whileHover={{ scale: 1.04 }}
+      transition={{ type: "spring", stiffness: 200, damping: 22 }}
+      className={`project-card relative flex-shrink-0 h-[320px] sm:h-[400px] rounded-[24px] border border-white/10 bg-[#09090b]/40 backdrop-blur-xl overflow-hidden cursor-pointer group select-none transition-all duration-300 ${
+        isMarquee ? 'w-[260px] sm:w-[350px]' : 'w-full'
+      }`}
+      style={{
+        boxShadow: isHovered ? "0 0 30px rgba(255, 122, 26, 0.2)" : "0 4px 30px rgba(0, 0, 0, 0.4)",
+        borderColor: isHovered ? "rgba(255, 122, 26, 0.35)" : "rgba(255, 255, 255, 0.1)"
+      }}
+    >
+      {/* Background Image */}
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+        <motion.img
+          src={`/images/portfolio/${project.img}`}
+          alt={project.title}
+          loading="lazy"
+          onError={(e) => {
+            e.target.src = project.fallbackImg;
+          }}
+          animate={{ scale: isHovered ? 1.06 : 1 }}
+          transition={{ type: "spring", stiffness: 150, damping: 20 }}
+          className="w-full h-full object-cover"
+        />
+        {/* Dark vignette to ensure readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent z-10" />
       </div>
-      
-      {/* Text Area Skeleton */}
-      <div className="p-6 md:p-8 flex flex-col justify-start text-left bg-charcoal gap-3">
-        <div className="h-3.5 bg-border/40 rounded w-1/4"></div>
-        <div className="h-6 bg-border/60 rounded w-3/5 my-1"></div>
-        <div className="flex flex-col gap-1.5 mt-1">
-          <div className="h-3 bg-border/30 rounded w-full"></div>
-          <div className="h-3 bg-border/30 rounded w-4/5"></div>
-        </div>
-        <div className="flex gap-2 mt-4 pt-4 border-t border-border/30">
-          <div className="h-7 bg-border/40 rounded w-20"></div>
-          <div className="h-7 bg-border/40 rounded w-20"></div>
-        </div>
+
+      {/* Floating Content Glass Box */}
+      <div 
+        className="absolute bottom-4 left-4 right-4 z-20 bg-[#09090b]/80 backdrop-blur-xl border border-white/10 rounded-[20px] p-5 md:p-6 transition-all duration-300 ease-out"
+        style={{
+          borderColor: isHovered ? "rgba(255, 122, 26, 0.25)" : "rgba(255, 255, 255, 0.1)"
+        }}
+      >
+        <span className="font-sans text-[10px] sm:text-[11px] text-[#ff7a1a] uppercase tracking-widest mb-1.5 block font-semibold">
+          {project.category}
+        </span>
+        <h3 className="font-display font-semibold text-base sm:text-lg text-white leading-tight">
+          {project.title}
+        </h3>
+
+        {/* Animated Slide-up Height Container */}
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ 
+            height: isHovered ? "auto" : 0, 
+            opacity: isHovered ? 1 : 0 
+          }}
+          transition={{ type: "spring", stiffness: 160, damping: 22 }}
+          className="overflow-hidden"
+        >
+          <p className="font-sans text-xs sm:text-[13px] text-gray-medium leading-relaxed mt-2.5 line-clamp-3">
+            {project.desc}
+          </p>
+          <div className="mt-4 pt-3 border-t border-white/5 flex justify-between items-center">
+            <span className="inline-flex items-center gap-1.5 text-xs text-[#ff7a1a] font-semibold tracking-wider uppercase">
+              View Project <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+            </span>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+});
+ProjectCard.displayName = 'ProjectCard';
+
+// Skeleton Loader for Card transitions
+const ProjectCardSkeleton = ({ isMarquee = false }) => {
+  return (
+    <div className={`project-card relative flex-shrink-0 h-[320px] sm:h-[400px] rounded-[24px] border border-white/10 bg-[#09090b]/40 backdrop-blur-xl overflow-hidden animate-pulse p-4 flex flex-col justify-end ${
+      isMarquee ? 'w-[260px] sm:w-[350px]' : 'w-full'
+    }`}>
+      <div className="bg-white/5 border border-white/5 rounded-[20px] p-5 w-full">
+        <div className="h-3.5 bg-white/10 rounded w-1/4 mb-2.5"></div>
+        <div className="h-6 bg-white/20 rounded w-3/5"></div>
       </div>
     </div>
   );
 };
 
-
-// Memoized ProjectCard component outside the parent function to prevent reconstruction on every render
-const ProjectCard = React.memo(({ project, style }) => {
-  return (
-    <div
-      style={style}
-      className="w-full flex flex-col bg-charcoal border border-border group overflow-hidden animate-project-fade-in"
-    >
-      {/* Image Frame */}
-      <div className="w-full overflow-hidden aspect-[16/10] bg-subtle-bg relative">
-        <img
-          src={`/images/portfolio/${project.img}`}
-          alt={project.title}
-          onError={(e) => {
-            e.target.src = project.fallbackImg;
-          }}
-          className="w-full h-full object-cover transition-transform duration-[600ms] ease-out scale-100 group-hover:scale-102"
-        />
-      </div>
-
-      {/* Text Area */}
-      <div className="p-6 md:p-8 flex flex-col justify-start text-left bg-charcoal">
-        <span className="font-sans text-[13px] text-gray-light uppercase tracking-wider mb-2 block">
-          {project.category}
-        </span>
-        <h3 className="font-display font-semibold text-[22px] md:text-[24px] leading-tight text-white mb-3">
-          {project.title}
-        </h3>
-        <p className="font-sans text-[15px] md:text-[16px] leading-[1.6] text-gray-medium line-clamp-2">
-          {project.desc}
-        </p>
-
-        {project.links && project.links.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-border/30">
-            {project.links.map((link, idx) => {
-              if (link.type === 'ios') {
-                return (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 hover:bg-[#ff7a1a]/15 border border-white/10 hover:border-[#ff7a1a]/40 text-white hover:text-[#ff7a1a] text-[10px] font-sans font-medium uppercase tracking-wider transition-colors duration-200"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C3.79 16.3 3.03 9.4 6.74 8.72c1.45-.26 2.5.39 3.33.39.83 0 2.26-.74 4-.54 1.77.2 3.12.98 3.84 2.24-3.52 2.1-2.95 6.84.44 8.21-.69 1.7-1.45 3.32-2.3 4.26zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.21 2.5-2.11 4.42-3.74 4.25z"/>
-                    </svg>
-                    App Store
-                  </a>
-                );
-              }
-              if (link.type === 'android') {
-                return (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 hover:bg-[#ff7a1a]/15 border border-white/10 hover:border-[#ff7a1a]/40 text-white hover:text-[#ff7a1a] text-[10px] font-sans font-medium uppercase tracking-wider transition-colors duration-200"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                      <path d="M3 5.277c0-1.611 1.738-2.628 3.144-1.84l12.83 7.19c1.436.804 1.436 2.876 0 3.68l-12.83 7.19c-1.406.788-3.144-.229-3.144-1.84V5.277z"/>
-                    </svg>
-                    Play Store
-                  </a>
-                );
-              }
-              if (link.type === 'web') {
-                return (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 hover:bg-[#ff7a1a]/15 border border-white/10 hover:border-[#ff7a1a]/40 text-white hover:text-[#ff7a1a] text-[10px] font-sans font-medium uppercase tracking-wider transition-colors duration-200"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="w-3.5 h-3.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
-                    </svg>
-                    {link.label || "Web"}
-                  </a>
-                );
-              }
-              return null;
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
-ProjectCard.displayName = 'ProjectCard';
-
 export default function Portfolio() {
   const sectionRef = useRef(null);
   const labelRef = useRef(null);
   const headlineRef = useRef(null);
-  const gridRef = useRef(null);
-  const col1Ref = useRef(null);
-  const col2Ref = useRef(null);
-  const col3Ref = useRef(null);
+  const viewMoreBtnRef = useRef(null);
 
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showAll, setShowAll] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  const handleFilterChange = (filterId) => {
-    if (filterId === activeFilter) return;
-    setIsTransitioning(true);
-    setActiveFilter(filterId);
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 350);
-  };
-
-  const filters = useMemo(() => [
-    { id: 'all', label: 'All' },
-    { id: 'ios', label: 'iOS' },
-    { id: 'android', label: 'Android' },
-    { id: 'flutter', label: 'Flutter' },
-    { id: 'web', label: 'Web' },
-    { id: 'react-native', label: 'React Native' }
-  ], []);
-
-  useEffect(() => {
-    // Wait for DOM to adjust and update ScrollTrigger positions
-    const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [activeFilter]);
-
-
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top 80%",
-        end: "top 20%",
-        scrub: 1,
-        onToggle: (self) => {
-          const state = self.isActive ? "transform, opacity" : "auto";
-          if (labelRef.current) labelRef.current.style.willChange = state;
-          if (headlineRef.current) headlineRef.current.style.willChange = state;
-          if (gridRef.current) gridRef.current.style.willChange = state;
-        }
-      }
-    });
-
-    tl.fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 })
-      .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
-      .fromTo(gridRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0 }, "-=0.4");
-
-    return () => {
-      tl.kill();
-    };
-  }, []);
-
-  useEffect(() => {
-    const col1 = col1Ref.current;
-    const col2 = col2Ref.current;
-    const col3 = col3Ref.current;
-    const container = gridRef.current;
-
-    if (!col1 || !col2 || !col3 || !container) return;
-
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 768px)", () => {
-        // Group the 3 columns into a single ScrollTrigger timeline on the container grid to minimize triggers
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: container,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-            onToggle: (self) => {
-              const state = self.isActive ? "transform" : "auto";
-              col1.style.willChange = state;
-              col2.style.willChange = state;
-              col3.style.willChange = state;
-            }
-          }
-        });
-
-        // Left column (col1) moves down on scroll
-        tl.fromTo(col1, { y: 0 }, { y: 80, ease: "none" }, 0);
-        
-        // Right column (col3) moves down on scroll
-        tl.fromTo(col3, { y: 0 }, { y: 80, ease: "none" }, 0);
-
-        // Middle column (col2) moves up on scroll (starts shifted down, slides up to normal)
-        tl.fromTo(col2, { y: 80 }, { y: 0, ease: "none" }, 0);
-      });
-    });
-
-    return () => ctx.revert();
-  }, []);
 
   const projects = [
     {
@@ -531,8 +439,28 @@ export default function Portfolio() {
       links: [
         { type: "web", url: "https://www.blostem.com/", label: "Link" }
       ]
+    },
+    {
+      id: 27,
+      title: "Tiffinwala",
+      category: "Flutter • iOS / Android / Web",
+      img: "tiffinwala.jpg",
+      fallbackImg: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+      desc: "Connects users with local home chefs providing home-cooked tiffin services, dry snacks, and fresh homemade meals.",
+      links: [
+        { type: "web", url: "https://tiffinwala.co/" }
+      ]
     }
   ];
+
+  const filters = useMemo(() => [
+    { id: 'all', label: 'All' },
+    { id: 'ios', label: 'iOS' },
+    { id: 'android', label: 'Android' },
+    { id: 'flutter', label: 'Flutter' },
+    { id: 'web', label: 'Web' },
+    { id: 'react-native', label: 'React Native' }
+  ], []);
 
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
@@ -557,22 +485,131 @@ export default function Portfolio() {
     });
   }, [activeFilter]);
 
-  const col1Projects = [];
-  const col2Projects = [];
-  const col3Projects = [];
+  const displayedProjects = useMemo(() => {
+    return showAll ? filteredProjects : filteredProjects.slice(0, 6);
+  }, [filteredProjects, showAll]);
 
-  filteredProjects.forEach((project, idx) => {
-    const projectWithIndex = { ...project, indexInList: idx };
-    if (activeFilter === 'all' && idx === filteredProjects.length - 1) {
-      col2Projects.push(projectWithIndex);
+  const handleFilterChange = (filterId) => {
+    if (filterId === activeFilter) return;
+    setIsTransitioning(true);
+    setActiveFilter(filterId);
+    setShowAll(false);
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const handleViewMoreClick = () => {
+    if (showAll) {
+      if (sectionRef.current && viewMoreBtnRef.current) {
+        // 1. Lock the current expanded height to prevent the browser from snapping/jumping
+        const currentHeight = sectionRef.current.offsetHeight;
+        sectionRef.current.style.minHeight = `${currentHeight}px`;
+
+        // 2. Collapse the projects list
+        setShowAll(false);
+
+        // 3. Scroll smoothly to the View More button using Lenis
+        setTimeout(() => {
+          if (window.lenis && viewMoreBtnRef.current) {
+            window.lenis.scrollTo(viewMoreBtnRef.current, {
+              offset: -window.innerHeight / 2 + 30, // Centers the button perfectly in viewport
+              duration: 1.0,
+              easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Expo out curve for ultra-premium feel
+              onComplete: () => {
+                // 4. Reset the minHeight and refresh ScrollTrigger once smooth scroll finishes
+                if (sectionRef.current) {
+                  sectionRef.current.style.minHeight = '';
+                  ScrollTrigger.refresh();
+                }
+              }
+            });
+          } else if (viewMoreBtnRef.current) {
+            // Native fallback if Lenis is not available
+            viewMoreBtnRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+              if (sectionRef.current) {
+                sectionRef.current.style.minHeight = '';
+                ScrollTrigger.refresh();
+              }
+            }, 850);
+          }
+        }, 50);
+      } else {
+        setShowAll(false);
+      }
     } else {
-      const rem = idx % 3;
-      if (rem === 0) col1Projects.push(projectWithIndex);
-      else if (rem === 1) col2Projects.push(projectWithIndex);
-      else col3Projects.push(projectWithIndex);
+      setShowAll(true);
     }
-  });
+  };
 
+  // Track whether the mouse has actually moved (preventing scroll-induced hovers)
+  useEffect(() => {
+    const handleGlobalMouseMove = () => {
+      window.isMouseActive = true;
+    };
+    const handleGlobalScroll = () => {
+      window.isMouseActive = false;
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('scroll', handleGlobalScroll, { passive: true });
+    window.isMouseActive = false;
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('scroll', handleGlobalScroll);
+    };
+  }, []);
+
+  // Refresh ScrollTrigger when grid layout changes (activeFilter or showAll changes) to prevent height offset issues in lower sections (like Testimonials and Contact/Footer)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [showAll, activeFilter]);
+
+  // GSAP animation for header elements
+  useEffect(() => {
+    if (!sectionRef.current) return;
+
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed reveal
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          end: "top 20%",
+          scrub: 1,
+        }
+      });
+
+      tl.fromTo(labelRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 })
+        .fromTo(headlineRef.current, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3");
+    });
+
+    // Mobile: Fast single entry fade-in once
+    mm.add("(max-width: 767px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 90%",
+          once: true,
+        }
+      });
+
+      tl.fromTo([labelRef.current, headlineRef.current],
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power2.out" }
+      );
+    });
+
+    return () => {
+      mm.revert();
+    };
+  }, []);
 
   return (
     <section
@@ -580,22 +617,25 @@ export default function Portfolio() {
       ref={sectionRef}
       className="relative w-full bg-transparent pt-20 pb-20 md:pt-28 md:pb-28 z-20 overflow-x-hidden"
     >
-      <div ref={headlineRef} className="max-w-[1400px] w-full mx-auto px-6 md:px-12 text-left mb-16 md:mb-24 will-change-transform">
-        <span ref={labelRef} className="font-sans text-xs font-semibold text-gray-light uppercase tracking-wider block mb-3 will-change-transform">
-          Our Work
-        </span>
-        <h2 className="font-display font-semibold text-[40px] md:text-[64px] leading-tight text-white mb-4 tracking-[-0.02em]">
-          Selected Works
-        </h2>
-        <p className="font-sans text-[18px] md:text-[20px] text-gray-medium leading-relaxed max-w-2xl">
-          Three years of creative excellence. Each project a collaboration. Each result, a masterpiece.
-        </p>
+      {/* Title Header */}
+      <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 mb-12 md:mb-16">
+        <div ref={headlineRef} className="will-change-transform text-left">
+          <span ref={labelRef} className="font-sans text-xs font-semibold text-gray-light uppercase tracking-wider block mb-3 will-change-transform">
+            Our Work
+          </span>
+          <h2 className="font-display font-semibold text-[40px] md:text-[64px] leading-tight text-white mb-4 tracking-[-0.02em]">
+            Selected Works
+          </h2>
+          <p className="font-sans text-[18px] md:text-[20px] text-gray-medium leading-relaxed max-w-2xl">
+            Three years of creative excellence. Each project a collaboration. Each result, a masterpiece.
+          </p>
+        </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 mb-16 md:mb-20 block md:flex md:justify-start">
-        <div className="w-auto md:w-auto overflow-x-auto no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
-          <div className="flex md:inline-flex gap-2 p-1.5 bg-charcoal/80 backdrop-blur-md border border-border/60 rounded-full min-w-max">
+      <div className="max-w-[1400px] w-full mx-auto px-6 md:px-12 mb-12 md:mb-16">
+        <div className="overflow-x-auto no-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+          <div className="flex gap-2 p-1.5 bg-charcoal/80 backdrop-blur-md border border-border/60 rounded-full min-w-max w-max">
             {filters.map((filter) => {
               const isActive = activeFilter === filter.id;
               return (
@@ -616,71 +656,47 @@ export default function Portfolio() {
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-6 md:hidden px-6">
+      {/* Showcase Area */}
+      <div className="w-full relative z-20">
         {isTransitioning ? (
-          <>
-            <ProjectCardSkeleton />
-            <ProjectCardSkeleton />
-            <ProjectCardSkeleton />
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-[1400px] mx-auto px-6 md:px-12">
+            {[...Array(6)].map((_, i) => (
+              <ProjectCardSkeleton key={i} isMarquee={false} />
+            ))}
+          </div>
         ) : (
-          filteredProjects.map((project, idx) => (
-            <ProjectCard key={project.id} project={project} style={{ animationDelay: `${idx * 50}ms` }} />
-          ))
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-[1400px] mx-auto px-6 md:px-12 animate-project-fade-in">
+            {displayedProjects.map((project) => (
+              <ProjectCard 
+                key={project.id} 
+                project={project} 
+                isMarquee={false}
+              />
+            ))}
+          </div>
         )}
-      </div>
 
-      <div 
-        ref={gridRef} 
-        className="max-w-[1400px] w-full mx-auto px-6 md:px-12 hidden md:grid md:grid-cols-3 gap-6 md:gap-8 relative"
-      >
-        <div 
-          ref={col1Ref} 
-          className="flex flex-col gap-6 md:gap-8 will-change-transform"
-        >
-          {isTransitioning ? (
-            <>
-              <ProjectCardSkeleton />
-              <ProjectCardSkeleton />
-            </>
-          ) : (
-            col1Projects.map((project) => (
-              <ProjectCard key={project.id} project={project} style={{ animationDelay: `${project.indexInList * 50}ms` }} />
-            ))
-          )}
-        </div>
-
-        <div 
-          ref={col2Ref} 
-          className="flex flex-col gap-6 md:gap-8 will-change-transform"
-        >
-          {isTransitioning ? (
-            <>
-              <ProjectCardSkeleton />
-              <ProjectCardSkeleton />
-            </>
-          ) : (
-            col2Projects.map((project) => (
-              <ProjectCard key={project.id} project={project} style={{ animationDelay: `${project.indexInList * 50}ms` }} />
-            ))
-          )}
-        </div>
-
-        <div 
-          ref={col3Ref} 
-          className="flex flex-col gap-6 md:gap-8 will-change-transform"
-        >
-          {isTransitioning ? (
-            <>
-              <ProjectCardSkeleton />
-              <ProjectCardSkeleton />
-            </>
-          ) : (
-            col3Projects.map((project) => (
-              <ProjectCard key={project.id} project={project} style={{ animationDelay: `${project.indexInList * 50}ms` }} />
-            ))
-          )}
-        </div>
+        {/* View More / View Less Button */}
+        {filteredProjects.length > 6 && !isTransitioning && (
+          <div ref={viewMoreBtnRef} className="flex justify-center mt-12 md:mt-16">
+            <button
+              onClick={handleViewMoreClick}
+              className="px-8 py-4 bg-[#ff7a1a]/15 text-[#ffa260] border border-[#ff7a1a]/30 font-bold rounded-full hover:bg-[#ff7a1a] hover:text-[#070707] hover:border-transparent transition-all duration-300 cursor-pointer text-sm tracking-wide uppercase flex items-center gap-2 group active:scale-[0.97]"
+            >
+              {showAll ? (
+                <>
+                  View Less
+                  <span className="inline-block transition-transform duration-300 group-hover:-translate-y-1">↑</span>
+                </>
+              ) : (
+                <>
+                  View More ({filteredProjects.length - 6} more)
+                  <span className="inline-block transition-transform duration-300 group-hover:translate-y-1">↓</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

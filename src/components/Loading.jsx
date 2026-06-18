@@ -90,7 +90,7 @@ export default function Loading({ onComplete }) {
               }}
               transition={{ duration: 0.6, ease: 'easeInOut' }}
             >
-              <h1 className="select-none leading-[0.9] tracking-[-0.04em] text-[clamp(32px,11vw,55px)] md:text-[clamp(65px,8vw,130px)] whitespace-nowrap">
+              <h1 className="select-none leading-[0.9] tracking-[-0.04em] text-[clamp(42px,11vw,55px)] md:text-[clamp(65px,8vw,130px)] text-center whitespace-nowrap">
                 <span className="font-['Outfit'] font-[900] text-[#F2ECE6]">
                   {"Kraftos".split("").map((char, index) => (
                     <span 
@@ -100,8 +100,7 @@ export default function Loading({ onComplete }) {
                       {char}
                     </span>
                   ))}
-                </span>
-                <span className="font-serif italic font-[700] text-[#F2ECE6]/90">
+                </span><span className="font-serif italic font-[700] text-[#F2ECE6]/90">
                   {"tech.".split("").map((char, index) => (
                     <span 
                       key={`t-${index}`}

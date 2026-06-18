@@ -290,7 +290,7 @@ const ShaderCanvas = React.memo(({ hue, speed, intensity, complexity }) => {
 });
 
 // --- Main Hero Component ---
-export default function Hero() {
+export default function Hero({ isLoading = false }) {
   // Hardcoded premium static values matching requirements
   const hue = 352;
   const speed = 1.4;
@@ -303,7 +303,11 @@ export default function Hero() {
   const bgLayerRef = useRef(null);
 
   useEffect(() => {
+    if (isLoading) return;
     if (!leftScrollRef.current || !leftMouseRef.current || !bgLayerRef.current) return;
+
+    // Center the element using Tailwind v4 classes to prevent double translation conflicts with GSAP
+
 
     // 1. Mouse move parallax using GSAP quickTo (targeted at the single text ref layer)
     const leftXTo = gsap.quickTo(leftMouseRef.current, "x", { duration: 1.2, ease: "power2.out" });
@@ -320,63 +324,82 @@ export default function Hero() {
       leftYTo(y * -12);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    const mm = gsap.matchMedia();
 
-    // 2. Consolidated Scroll Parallax Timeline (0 -> 300px range)
-    const tl300 = gsap.timeline({
-      scrollTrigger: {
-        trigger: "#home",
-        start: "top top",
-        end: "300px top",
-        scrub: true,
-        onToggle: (self) => {
-          const state = self.isActive ? "transform, opacity" : "auto";
-          if (leftScrollRef.current) leftScrollRef.current.style.willChange = state;
-        }
-      }
-    });
+    // Desktop: Mouse parallax + Scroll-scrubbed text parallax & WebGL fade
+    mm.add("(min-width: 768px)", () => {
+      window.addEventListener('mousemove', handleMouseMove);
 
-    // Translate down and fade out on scroll
-    tl300.to(leftScrollRef.current, {
-      y: 120,
-      opacity: 0,
-      ease: "none"
-    }, 0);
-
-    // 3. Fade out the fixed WebGL background over the first 50% of the About page scroll (approx 100vh to 150vh)
-    const tlBg = gsap.timeline({
-      scrollTrigger: {
-        trigger: "#about",
-        start: "top top",      // starts when top of About section hits top of viewport (100vh scroll)
-        end: "top -50%",       // ends when user has scrolled 50vh further down (middle of About page)
-        scrub: true,
-        onToggle: (self) => {
-          if (bgLayerRef.current) {
-            bgLayerRef.current.style.willChange = self.isActive ? "opacity" : "auto";
+      const tl300 = gsap.timeline({
+        scrollTrigger: {
+          trigger: "#home",
+          start: "top top",
+          end: "300px top",
+          scrub: true,
+          onToggle: (self) => {
+            const state = self.isActive ? "transform, opacity" : "auto";
+            if (leftScrollRef.current) leftScrollRef.current.style.willChange = state;
           }
         }
-      }
+      });
+
+      tl300.to(leftScrollRef.current, {
+        y: 120,
+        opacity: 0,
+        ease: "none"
+      }, 0);
+
+      const tlBg = gsap.timeline({
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top top",
+          end: "top -50%",
+          scrub: true,
+          onToggle: (self) => {
+            if (bgLayerRef.current) {
+              bgLayerRef.current.style.willChange = self.isActive ? "opacity" : "auto";
+            }
+          }
+        }
+      });
+
+      tlBg.to(bgLayerRef.current, {
+        opacity: 0,
+        ease: "none"
+      });
     });
 
-    tlBg.to(bgLayerRef.current, {
-      opacity: 0,
-      ease: "none"
+    // Mobile: Static text layout (scrolls naturally) and simple toggle fade-out for WebGL background
+    mm.add("(max-width: 767px)", () => {
+      gsap.to(bgLayerRef.current, {
+        opacity: 0,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+          onToggle: (self) => {
+            if (bgLayerRef.current) {
+              bgLayerRef.current.style.willChange = self.isActive ? "opacity" : "auto";
+            }
+          }
+        }
+      });
     });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      tl300.kill();
-      tlBg.kill();
+      mm.revert();
     };
-  }, []);
+  }, [isLoading]);
 
   return (
     <section
       id="home"
-      className="relative w-full h-screen bg-transparent flex flex-col justify-between items-center pt-24 pb-8 md:pb-12 overflow-x-hidden"
+      className="relative w-full h-dvh bg-transparent flex flex-col justify-between items-center pt-24 pb-8 md:pb-12 overflow-x-hidden"
     >
       {/* Background WebGL canvas layer - FIXED to cover viewport without scrolling or cropping */}
-      <div ref={bgLayerRef} className="fixed top-0 left-0 w-full h-screen z-0 overflow-hidden pointer-events-none">
+      <div ref={bgLayerRef} className="fixed top-0 left-0 w-full h-dvh z-0 overflow-hidden pointer-events-none">
         <ShaderCanvas hue={hue} speed={speed} intensity={intensity} complexity={complexity} />
         
         {/* Premium blending gradient overlay: cinematic progression from transparent to pure black (#070707) */}
@@ -394,7 +417,7 @@ export default function Hero() {
         className="absolute top-1/2 left-1/2 z-10 text-center -translate-x-1/2 -translate-y-1/2 mt-[188px] md:mt-[220px] will-change-[transform,opacity] pointer-events-auto"
       >
         <div ref={leftMouseRef}>
-          <h1 className="select-none leading-[0.9] tracking-[-0.04em] text-[clamp(32px,11vw,55px)] md:text-[clamp(65px,8vw,130px)] whitespace-nowrap">
+          <h1 className="select-none leading-[0.9] tracking-[-0.04em] text-[clamp(42px,11vw,55px)] md:text-[clamp(65px,8vw,130px)] text-center whitespace-nowrap">
             <span className="font-['Outfit'] font-[900] text-[#F2ECE6]">
               {"Kraftos".split("").map((char, index) => (
                 <span 
@@ -404,8 +427,7 @@ export default function Hero() {
                   {char}
                 </span>
               ))}
-            </span>
-            <span className="font-serif italic font-[700] text-[#F2ECE6]/90">
+            </span><span className="font-serif italic font-[700] text-[#F2ECE6]/90">
               {"tech.".split("").map((char, index) => (
                 <span 
                   key={`t-${index}`}

@@ -12,20 +12,35 @@ export default function Manifesto() {
   useEffect(() => {
     if (!svgWrapRef.current) return;
 
-    // SVG container fade-in on scroll
-    const svgTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: svgWrapRef.current,
-        start: "top 90%",
-        end: "top 40%",
-        scrub: 1,
-      }
+    const mm = gsap.matchMedia();
+
+    // Desktop: Scroll-scrubbed fade-in
+    mm.add("(min-width: 768px)", () => {
+      const svgTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: svgWrapRef.current,
+          start: "top 90%",
+          end: "top 40%",
+          scrub: 1,
+        }
+      });
+      svgTl.fromTo(svgWrapRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
     });
 
-    svgTl.fromTo(svgWrapRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
+    // Mobile: Fast single fade-in once
+    mm.add("(max-width: 767px)", () => {
+      const svgTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: svgWrapRef.current,
+          start: "top 90%",
+          once: true,
+        }
+      });
+      svgTl.fromTo(svgWrapRef.current, { opacity: 0 }, { opacity: 1, duration: 1, ease: "power2.out" });
+    });
 
     return () => {
-      svgTl.kill();
+      mm.revert();
     };
   }, []);
 
